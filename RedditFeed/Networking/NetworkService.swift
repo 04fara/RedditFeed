@@ -2,10 +2,13 @@
 //  NetworkService.swift
 //  RedditFeed
 //
-//  Created by F K on 22/01/2022.
+//  Created by Farid Kopzhassarov on 22/01/2022.
 //
 
 import Foundation
+import UIKit
+
+let imageCache: NSCache<NSString, UIImage> = .init()
 
 class NetworkService {
     class func request<T: Codable>(endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
@@ -41,5 +44,30 @@ class NetworkService {
             }
         }
         dataTask.resume()
+    }
+
+    class func fetchImage(from url: URL, completion: @escaping (Result<UIImage, Error>) -> Void) -> URLSessionDataTask? {
+        if let image = imageCache.object(forKey: NSString(string: url.absoluteString)) {
+            completion(.success(image))
+            return nil
+        }
+
+        let dataTask = URLSession.shared.dataTask(with: url) { data, _, error in
+            if let error = error {
+                completion(.failure(error))
+                print(error.localizedDescription)
+                return
+            }
+
+            guard let data = data,
+                  let image = UIImage(data: data)
+            else { return }
+
+            imageCache.setObject(image, forKey: NSString(string: url.absoluteString))
+            completion(.success(image))
+        }
+        dataTask.resume()
+
+        return dataTask
     }
 }

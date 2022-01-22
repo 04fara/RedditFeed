@@ -2,7 +2,7 @@
 //  RedditFeedUITestsLaunchTests.swift
 //  RedditFeedUITests
 //
-//  Created by F K on 22/01/2022.
+//  Created by Farid Kopzhassarov on 22/01/2022.
 //
 
 import XCTest

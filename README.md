@@ -7,12 +7,12 @@ Built using XCode 13.1 (Swift 5.5, for iOS 13.0 or later).
 ### TODO:
 - Implement:
     - [x] Endpoints and NetworkService;
-    - [ ] custom CollectionView layout;
-    - [ ] CollectionView cell protocol to let it contain different types of content;
-    - [ ] CollectionView cell for images;
-    - [ ] CollectionView cell for videos;
-    - [ ] Sticky header (supplementary view) for subreddits list;
-    - [ ] Placeholder view that shows up while content is being fetched;
+    - [x] custom CollectionView layout;
+    - [x] CollectionView cell for images;
+    - [x] CollectionView cell for videos;
+    - [ ] infinite scroll;
+    - [ ] sticky header (supplementary view) for subreddits list;
+    - [ ] placeholder view that shows up while content is being fetched;
 - [ ] Write tests for NetworkService;
 
 ### How to run:

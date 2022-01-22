@@ -2,7 +2,7 @@
 //  RedditEndpoint.swift
 //  RedditFeed
 //
-//  Created by F K on 22/01/2022.
+//  Created by Farid Kopzhassarov on 22/01/2022.
 //
 
 import Foundation
@@ -34,7 +34,7 @@ enum RedditEndpoint: Endpoint {
     var parameters: [URLQueryItem] {
         switch self {
         case .getSubredditMedia(_, let after):
-            var parameters: [URLQueryItem] = [.init(name: "limit", value: "10")]
+            var parameters: [URLQueryItem] = [.init(name: "limit", value: "30")]
             if let after = after {
                 parameters.append(.init(name: "after", value: after))
             }
