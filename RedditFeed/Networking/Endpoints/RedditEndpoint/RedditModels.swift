@@ -18,49 +18,49 @@ private func unescapeURL(_ url: String?) -> String {
         "&apos;": "'"
     ]
     var unescapedURL = url
-    for (escapedChar, unescapedChar) in charMap {
-        unescapedURL = unescapedURL.replacingOccurrences(of: escapedChar, with: unescapedChar, options: NSString.CompareOptions.literal, range: nil)
+    charMap.forEach { (key, value) in
+        unescapedURL = unescapedURL.replacingOccurrences(of: key, with: value, options: .literal)
     }
 
     return unescapedURL
 }
 
-struct RedditResponse: Codable {
+struct RedditResponse: Decodable {
     let data: RedditResultsPage?
 }
 
-struct RedditResultsPage: Codable {
+struct RedditResultsPage: Decodable {
     let after: String?
     let before: String?
     let dist: Int
     let children: [RedditResult]
 }
 
-struct RedditResult: Codable {
+struct RedditResult: Decodable {
     let kind: String
     let data: RedditPost
 }
 
 fileprivate struct RawRedditPost: Decodable {
-    struct RedditMedia: Codable {
+    struct RedditMedia: Decodable {
         let reddit_video: RedditVideo?
     }
 
-    struct RedditVideo: Codable {
+    struct RedditVideo: Decodable {
         let fallback_url: String
         let height: Int
         let width: Int
     }
 
-    struct RedditPreview: Codable {
+    struct RedditPreview: Decodable {
         let images: [RedditPreviewImage]
     }
 
-    struct RedditPreviewImage: Codable {
+    struct RedditPreviewImage: Decodable {
         let source: RedditPreviewSource
     }
 
-    struct RedditPreviewSource: Codable {
+    struct RedditPreviewSource: Decodable {
         let url: String
         let height: Int
         let width: Int
@@ -78,10 +78,24 @@ fileprivate struct RawRedditPost: Decodable {
     let preview: RedditPreview?
 }
 
-protocol A { }
-struct B: A {}
+enum RedditPostType {
+    case plain
+    case image
+    case video
 
-struct RedditPost: Codable {
+    var isMedia: Bool {
+        switch self {
+        case .plain:
+            return false
+        case .image:
+            return true
+        case .video:
+            return true
+        }
+    }
+}
+
+struct RedditPost: Decodable {
     let id: String
     let subreddit: String
     let created: Double
@@ -89,11 +103,10 @@ struct RedditPost: Codable {
     let url: URL?
     let title: String
     let description: String
-    let hasMedia: Bool
-    let isVideo: Bool
     let mediaURL: URL?
     let mediaHeight: Int?
     let mediaWidth: Int?
+    let type: RedditPostType
 
     init(from decoder: Decoder) throws {
         let rawRedditPost: RawRedditPost = try .init(from: decoder)
@@ -105,16 +118,21 @@ struct RedditPost: Codable {
         url = URL(string: rawRedditPost.url)
         title = rawRedditPost.title
         description = rawRedditPost.selftext
-        isVideo = rawRedditPost.is_video
-        if isVideo {
-            mediaURL = URL(string: unescapeURL(rawRedditPost.media?.reddit_video?.fallback_url))
-            mediaHeight = rawRedditPost.media?.reddit_video?.height
-            mediaWidth = rawRedditPost.media?.reddit_video?.width
+        if let video = rawRedditPost.media?.reddit_video {
+            type = .video
+            mediaURL = URL(string: unescapeURL(video.fallback_url))
+            mediaHeight = video.height
+            mediaWidth = video.width
+        } else if let preview = rawRedditPost.preview?.images.first {
+            type = .image
+            mediaURL = URL(string: unescapeURL(preview.source.url))
+            mediaHeight = preview.source.height
+            mediaWidth = preview.source.width
         } else {
-            mediaURL = URL(string: unescapeURL(rawRedditPost.preview?.images.first?.source.url))
-            mediaHeight = rawRedditPost.preview?.images.first?.source.height
-            mediaWidth = rawRedditPost.preview?.images.first?.source.width
+            type = .plain
+            mediaURL = nil
+            mediaHeight = nil
+            mediaWidth = nil
         }
-        hasMedia = mediaURL != nil
     }
 }

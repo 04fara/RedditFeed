@@ -36,6 +36,8 @@ class RedditImageCollectionViewCell: UICollectionViewCell {
     }
 
     override func prepareForReuse() {
+        imageView.image = nil
+
         dataTask?.cancel()
         dataTask = nil
     }

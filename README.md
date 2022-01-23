@@ -1,6 +1,6 @@
 # RedditFeed
 
-This application let's you explore different subreddits that are stored for further use.
+This application lets you explore various subreddits and stores them in bookmarks for you to easily find them.
 
 Built using XCode 13.1 (Swift 5.5, for iOS 13.0 or later).
 
@@ -10,9 +10,9 @@ Built using XCode 13.1 (Swift 5.5, for iOS 13.0 or later).
     - [x] custom CollectionView layout;
     - [x] CollectionView cell for images;
     - [x] CollectionView cell for videos;
-    - [ ] infinite scroll;
+    - [x] infinite scroll;
     - [ ] sticky header (supplementary view) for subreddits list;
-    - [ ] placeholder view that shows up while content is being fetched;
+    - [ ] placeholder (skeleton/shimmer) view that shows up while content is being fetched;
 - [ ] Write tests for NetworkService;
 
 ### How to run:

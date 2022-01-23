@@ -61,19 +61,17 @@ class CustomFlowLayout: UICollectionViewLayout {
             let column: Int = yOffset[0] <= yOffset[1] ? 0 : 1
             let frame: CGRect = .init(x: xOffset[column], y: yOffset[column], width: itemWidth, height: itemHeight)
 
+            contentHeight = max(contentHeight, frame.maxY)
+            yOffset[column] += itemHeight
+
             let itemAttributes: UICollectionViewLayoutAttributes = .init(forCellWith: indexPath)
             itemAttributes.frame = frame.insetBy(dx: Const.itemSpacing, dy: Const.itemSpacing)
             cache.append(itemAttributes)
-
-            contentHeight = max(contentHeight, frame.maxY)
-            yOffset[column] += itemHeight
         }
     }
 
     override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-        let visible: [UICollectionViewLayoutAttributes] = cache.filter { attributes in
-            attributes.frame.intersects(rect)
-        }
+        let visible: [UICollectionViewLayoutAttributes] = cache.filter { $0.frame.intersects(rect) }
 
         return visible
     }

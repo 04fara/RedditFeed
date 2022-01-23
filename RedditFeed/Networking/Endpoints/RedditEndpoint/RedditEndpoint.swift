@@ -8,7 +8,14 @@
 import Foundation
 
 enum RedditEndpoint: Endpoint {
-    case getSubredditMedia(subreddit: String, after: String? = nil)
+    enum RedditSortOptions {
+        case hot
+        case new
+        case top
+        case rising
+    }
+
+    case getSubredditMedia(subreddit: String, sort: RedditSortOptions, after: String? = nil)
 
     var scheme: String {
         switch self {
@@ -26,14 +33,14 @@ enum RedditEndpoint: Endpoint {
 
     var path: String {
         switch self {
-        case .getSubredditMedia(let subreddit, _):
-            return "/r/\(subreddit)/new.json"
+        case .getSubredditMedia(let subreddit, let sort, _):
+            return "/r/\(subreddit)/\(sort).json"
         }
     }
 
     var parameters: [URLQueryItem] {
         switch self {
-        case .getSubredditMedia(_, let after):
+        case .getSubredditMedia(_, _, let after):
             var parameters: [URLQueryItem] = [.init(name: "limit", value: "30")]
             if let after = after {
                 parameters.append(.init(name: "after", value: after))

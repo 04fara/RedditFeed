@@ -7,11 +7,14 @@
 
 import Foundation
 import UIKit
+import AVFoundation
 
 let imageCache: NSCache<NSString, UIImage> = .init()
+let videoCache: NSCache<NSString, AVQueuePlayer> = .init()
+let looperCache: NSCache<AVQueuePlayer, AVPlayerLooper> = .init()
 
 class NetworkService {
-    class func request<T: Codable>(endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
+    class func request<T: Decodable>(endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
         var components: URLComponents = .init()
         components.scheme = endpoint.scheme
         components.host = endpoint.baseURL
@@ -47,7 +50,7 @@ class NetworkService {
     }
 
     class func fetchImage(from url: URL, completion: @escaping (Result<UIImage, Error>) -> Void) -> URLSessionDataTask? {
-        if let image = imageCache.object(forKey: NSString(string: url.absoluteString)) {
+        if let image = imageCache.object(forKey: url.absoluteString as NSString) {
             completion(.success(image))
             return nil
         }
@@ -63,7 +66,7 @@ class NetworkService {
                   let image = UIImage(data: data)
             else { return }
 
-            imageCache.setObject(image, forKey: NSString(string: url.absoluteString))
+            imageCache.setObject(image, forKey: url.absoluteString as NSString)
             completion(.success(image))
         }
         dataTask.resume()

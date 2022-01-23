@@ -13,6 +13,7 @@ class RedditVideoCollectionViewCell: UICollectionViewCell {
     var queuePlayer: AVQueuePlayer?
     var playerLayer: AVPlayerLayer?
 
+    // TODO: add preview image before video is ready
     let imageView: UIImageView = {
         let imageView: UIImageView = .init()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -31,7 +32,7 @@ class RedditVideoCollectionViewCell: UICollectionViewCell {
         super.init(frame: frame)
 
         setupView()
-        setupLayout()
+        //setupLayout()
     }
 
     required init?(coder: NSCoder) {
@@ -39,9 +40,9 @@ class RedditVideoCollectionViewCell: UICollectionViewCell {
     }
 
     override func prepareForReuse() {
+        queuePlayer?.pause()
         playerLayer?.removeFromSuperlayer()
         playerLayer = nil
-        queuePlayer?.pause()
         playerLooper = nil
         queuePlayer = nil
     }
@@ -51,21 +52,30 @@ extension RedditVideoCollectionViewCell {
     func setupPost(_ post: RedditPost) {
         if let url = post.mediaURL {
             queuePlayer = {
-                let playerItem: AVPlayerItem = .init(url: url)
-                let newQueuePlayer: AVQueuePlayer = .init(playerItem: playerItem)
-                playerLooper = .init(player: newQueuePlayer, templateItem: playerItem)
-                newQueuePlayer.play()
+                let newQueuePlayer: AVQueuePlayer
+                if let cachedQueuePlayer = videoCache.object(forKey: url.absoluteString as NSString),
+                   let cachedPlayerLooper = looperCache.object(forKey: cachedQueuePlayer) {
+                    newQueuePlayer = cachedQueuePlayer
+                    playerLooper = cachedPlayerLooper
+                } else {
+                    let playerItem: AVPlayerItem = .init(url: url)
+                    newQueuePlayer = .init(playerItem: playerItem)
+                    playerLooper = .init(player: newQueuePlayer, templateItem: playerItem)
+                    videoCache.setObject(newQueuePlayer, forKey: url.absoluteString as NSString)
+                    looperCache.setObject(playerLooper!, forKey: newQueuePlayer)
+                }
 
                 return newQueuePlayer
             }()
             playerLayer = {
                 let newPlayerLayer: AVPlayerLayer = .init(player: queuePlayer)
                 newPlayerLayer.frame = bounds
+                newPlayerLayer.videoGravity = .resizeAspectFill
                 layer.addSublayer(newPlayerLayer)
+                queuePlayer?.play()
 
                 return newPlayerLayer
             }()
-            //queuePlayer?.play()
         }
     }
 
@@ -75,7 +85,7 @@ extension RedditVideoCollectionViewCell {
         clipsToBounds = true
         contentView.backgroundColor = .secondarySystemBackground
 
-        contentView.addSubview(imageView)
+        //contentView.addSubview(imageView)
     }
 
     private func setupLayout() {

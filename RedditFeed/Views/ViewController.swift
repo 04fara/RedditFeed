@@ -16,7 +16,7 @@ class ViewController: UIViewController {
         return collectionView
     }()
 
-    private var posts: [RedditPost]?
+    private var posts: [RedditPost] = []
     private var lastPostKind: String?
     private var lastPostId: String?
     private var lastPostKindId: String? {
@@ -32,29 +32,10 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        if let layout = collectionView.collectionViewLayout as? CustomFlowLayout {
-            layout.delegate = self
-        }
-
-        NetworkService.request(endpoint: RedditEndpoint.getSubredditMedia(subreddit: "GlobalOffensive", after: lastPostKindId)) { [weak self] (result: Result<RedditResponse, Error>) in
-            switch result {
-            case .success(let response):
-                let filteredResponse = response.data?.children.filter { $0.data.hasMedia }
-                self?.posts = filteredResponse?.compactMap { $0.data }
-                self?.lastPostKind = filteredResponse?.last?.kind
-                self?.lastPostId = filteredResponse?.last?.data.id
-                self?.collectionView.reloadData()
-            case .failure(let error):
-                print(error.localizedDescription)
-            }
-        }
-
         view.addSubview(collectionView)
+        setupCollectionView()
 
-        collectionView.register(RedditImageCollectionViewCell.self, forCellWithReuseIdentifier: String(describing: RedditImageCollectionViewCell.self))
-        collectionView.register(RedditVideoCollectionViewCell.self, forCellWithReuseIdentifier: String(describing: RedditVideoCollectionViewCell.self))
-        collectionView.delegate = self
-        collectionView.dataSource = self
+        fetchRedditPosts()
     }
 
     override func viewWillLayoutSubviews() {
@@ -72,7 +53,6 @@ class ViewController: UIViewController {
 extension ViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         //collectionView.deselectItem(at: indexPath, animated: true)
-        //print(posts?[indexPath.item])
         if let cell = collectionView.cellForItem(at: indexPath) as? RedditVideoCollectionViewCell {
             if cell.queuePlayer?.rate != 0 {
                 cell.queuePlayer?.pause()
@@ -85,26 +65,34 @@ extension ViewController: UICollectionViewDelegate {
 
 extension ViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return posts?.count ?? 0
+        return posts.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if let post = posts?[indexPath.row],
-           post.hasMedia {
-            if post.isVideo {
-                let postCollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: RedditVideoCollectionViewCell.self), for: indexPath) as! RedditVideoCollectionViewCell
-                postCollectionViewCell.setupPost(post)
+        let post = posts[indexPath.row]
+        let cellType: String
+        switch post.type {
+        case .video:
+            cellType = String(describing: RedditVideoCollectionViewCell.self)
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellType, for: indexPath) as! RedditVideoCollectionViewCell
+            cell.setupPost(post)
 
-                return postCollectionViewCell
-            } else {
-                let postCollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: RedditImageCollectionViewCell.self), for: indexPath) as! RedditImageCollectionViewCell
-                postCollectionViewCell.setupPost(post)
+            return cell
+        case .image:
+            cellType = String(describing: RedditImageCollectionViewCell.self)
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellType, for: indexPath) as! RedditImageCollectionViewCell
+            cell.setupPost(post)
 
-            	return postCollectionViewCell
-            }
+            return cell
+        default:
+            return .init()
         }
+    }
 
-        return .init()
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        if indexPath.row == posts.count - 1 {
+            fetchRedditPosts()
+        }
     }
 }
 
@@ -112,11 +100,44 @@ extension ViewController: CustomFlowLayoutDelegate {
   func collectionView(
     _ collectionView: UICollectionView,
     scaleRatioForItemAtIndexPath indexPath:IndexPath) -> CGFloat {
-        guard let posts = posts,
-              let height = posts[indexPath.item].mediaHeight,
-              let width = posts[indexPath.item].mediaWidth
+        guard let height = posts[indexPath.row].mediaHeight,
+              let width = posts[indexPath.row].mediaWidth
         else { return .zero }
 
         return CGFloat(height) / CGFloat(width)
   }
+}
+
+extension ViewController {
+    private func setupCollectionView() {
+        if let layout = collectionView.collectionViewLayout as? CustomFlowLayout {
+            layout.delegate = self
+        }
+
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.register(RedditImageCollectionViewCell.self, forCellWithReuseIdentifier: String(describing: RedditImageCollectionViewCell.self))
+        collectionView.register(RedditVideoCollectionViewCell.self, forCellWithReuseIdentifier: String(describing: RedditVideoCollectionViewCell.self))
+        collectionView.delegate = self
+        collectionView.dataSource = self
+    }
+
+    private func fetchRedditPosts() {
+        NetworkService.request(endpoint: RedditEndpoint.getSubredditMedia(subreddit: "GlobalOffensive", sort: .top, after: lastPostKindId)) { [weak self] (result: Result<RedditResponse, Error>) in
+            switch result {
+            case .success(let response):
+                let filteredResponse = response.data?.children.filter { $0.data.type.isMedia }
+                if let filteredResponse = filteredResponse {
+                    self?.posts.append(contentsOf: filteredResponse.compactMap { $0.data })
+                    self?.lastPostKind = filteredResponse.last?.kind
+                    self?.lastPostId = filteredResponse.last?.data.id
+                    self?.collectionView.reloadData()
+                } else {
+                    print("response is unvalid")
+                }
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
+    }
 }
