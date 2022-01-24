@@ -11,7 +11,8 @@ Built using XCode 13.1 (Swift 5.5, for iOS 13.0 or later).
     - [x] CollectionView cell for images;
     - [x] CollectionView cell for videos;
     - [x] infinite scroll;
-    - [ ] sticky header (supplementary view) for subreddits list;
+    - [x] sticky header view for subreddits list;
+    - [ ] search bar in footer of subreddit list;
     - [ ] placeholder (skeleton/shimmer) view that shows up while content is being fetched;
 - [x] Write tests for NetworkService;
 

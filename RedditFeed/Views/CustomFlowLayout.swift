@@ -65,7 +65,10 @@ class CustomFlowLayout: UICollectionViewLayout {
             yOffset[column] += itemHeight
 
             let itemAttributes: UICollectionViewLayoutAttributes = .init(forCellWith: indexPath)
-            itemAttributes.frame = frame.insetBy(dx: Const.itemSpacing, dy: Const.itemSpacing)
+            var insets: UIEdgeInsets = .init(top: Const.itemSpacing, left: Const.itemSpacing, bottom: Const.itemSpacing, right: Const.itemSpacing)
+            insets.left *= column == 0 ? 0 : 1
+            insets.right *= column == 0 ? 1 : 0
+            itemAttributes.frame = frame.inset(by: insets)
             cache.append(itemAttributes)
         }
     }
