@@ -8,13 +8,6 @@
 import Foundation
 
 enum RedditEndpoint: Endpoint {
-    enum RedditSortOptions {
-        case hot
-        case new
-        case top
-        case rising
-    }
-
     case getSubredditMedia(subreddit: String, sort: RedditSortOptions, after: String? = nil)
 
     var scheme: String {
@@ -55,5 +48,16 @@ enum RedditEndpoint: Endpoint {
         case .getSubredditMedia:
             return "GET"
         }
+    }
+}
+
+extension RedditEndpoint: EndpointSortable {
+    typealias SortOptions = RedditSortOptions
+
+    enum RedditSortOptions: String {
+        case hot
+        case new
+        case top
+        case rising
     }
 }

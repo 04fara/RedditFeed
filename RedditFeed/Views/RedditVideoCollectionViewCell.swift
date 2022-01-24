@@ -6,7 +6,10 @@
 //
 
 import UIKit
-import AVKit
+import AVFoundation
+
+let videoPlayerCache: NSCache<NSString, AVQueuePlayer> = .init()
+let looperCache: NSCache<AVQueuePlayer, AVPlayerLooper> = .init()
 
 class RedditVideoCollectionViewCell: UICollectionViewCell {
     var playerLooper: AVPlayerLooper?
@@ -53,7 +56,7 @@ extension RedditVideoCollectionViewCell {
         if let url = post.mediaURL {
             queuePlayer = {
                 let newQueuePlayer: AVQueuePlayer
-                if let cachedQueuePlayer = videoCache.object(forKey: url.absoluteString as NSString),
+                if let cachedQueuePlayer = videoPlayerCache.object(forKey: url.absoluteString as NSString),
                    let cachedPlayerLooper = looperCache.object(forKey: cachedQueuePlayer) {
                     newQueuePlayer = cachedQueuePlayer
                     playerLooper = cachedPlayerLooper
@@ -61,7 +64,7 @@ extension RedditVideoCollectionViewCell {
                     let playerItem: AVPlayerItem = .init(url: url)
                     newQueuePlayer = .init(playerItem: playerItem)
                     playerLooper = .init(player: newQueuePlayer, templateItem: playerItem)
-                    videoCache.setObject(newQueuePlayer, forKey: url.absoluteString as NSString)
+                    videoPlayerCache.setObject(newQueuePlayer, forKey: url.absoluteString as NSString)
                     looperCache.setObject(playerLooper!, forKey: newQueuePlayer)
                 }
 

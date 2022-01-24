@@ -13,7 +13,7 @@ Built using XCode 13.1 (Swift 5.5, for iOS 13.0 or later).
     - [x] infinite scroll;
     - [ ] sticky header (supplementary view) for subreddits list;
     - [ ] placeholder (skeleton/shimmer) view that shows up while content is being fetched;
-- [ ] Write tests for NetworkService;
+- [x] Write tests for NetworkService;
 
 ### How to run:
 

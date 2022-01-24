@@ -8,10 +8,8 @@
 import UIKit
 
 class RedditImageCollectionViewCell: UICollectionViewCell {
-    var dataTask: URLSessionDataTask? = nil
-
-    let imageView: UIImageView = {
-        let imageView: UIImageView = .init()
+    let imageView: UIImageViewAsync = {
+        let imageView: UIImageViewAsync = .init()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.backgroundColor = .secondarySystemBackground
         imageView.contentMode = .scaleAspectFill
@@ -36,26 +34,16 @@ class RedditImageCollectionViewCell: UICollectionViewCell {
     }
 
     override func prepareForReuse() {
+        imageView.dataTask?.cancel()
+        imageView.dataTask = nil
         imageView.image = nil
-
-        dataTask?.cancel()
-        dataTask = nil
     }
 }
 
 extension RedditImageCollectionViewCell {
     func setupPost(_ post: RedditPost) {
         if let url = post.mediaURL {
-            dataTask = NetworkService.fetchImage(from: url) { [weak self] result in
-                switch result {
-                case .success(let image):
-                    DispatchQueue.main.async {
-                        self?.imageView.image = image
-                    }
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            }
+            imageView.loadRemoteImage(from: url)
         }
     }
 

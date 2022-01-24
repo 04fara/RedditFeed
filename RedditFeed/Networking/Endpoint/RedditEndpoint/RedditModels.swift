@@ -34,6 +34,10 @@ struct RedditResultsPage: Decodable {
     let before: String?
     let dist: Int
     let children: [RedditResult]
+
+    var posts: [RedditPost] {
+        return children.compactMap { $0.data }
+    }
 }
 
 struct RedditResult: Decodable {
@@ -78,24 +82,26 @@ fileprivate struct RawRedditPost: Decodable {
     let preview: RedditPreview?
 }
 
-enum RedditPostType {
-    case plain
-    case image
-    case video
+struct RedditPost: Decodable, Identifiable {
+    let uuid: UUID = .init()
 
-    var isMedia: Bool {
-        switch self {
-        case .plain:
-            return false
-        case .image:
-            return true
-        case .video:
-            return true
+    enum RedditPostType {
+        case plain
+        case image
+        case video
+
+        var isMedia: Bool {
+            switch self {
+            case .plain:
+                return false
+            case .image:
+                return true
+            case .video:
+                return true
+            }
         }
     }
-}
 
-struct RedditPost: Decodable {
     let id: String
     let subreddit: String
     let created: Double
@@ -134,5 +140,15 @@ struct RedditPost: Decodable {
             mediaHeight = nil
             mediaWidth = nil
         }
+    }
+}
+
+extension RedditPost: Hashable {
+    func hash(into hasher: inout Hasher) {
+      hasher.combine(uuid)
+    }
+
+    static func == (lhs: RedditPost, rhs: RedditPost) -> Bool {
+      lhs.uuid == rhs.uuid
     }
 }

@@ -9,25 +9,19 @@ import XCTest
 @testable import RedditFeed
 
 class RedditFeedTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    func testNetworkServiceRequest() throws {
+        let mockNetworkService: MockNetworkService = .init()
+        mockNetworkService.request(endpoint: RedditEndpoint.getSubredditMedia(subreddit: "GlobalOffensive", sort: .new)) { (result: Result<RedditResponse, Error>) in
+            switch result {
+            case .success(let response):
+                XCTAssertNotNil(response.data)
+                let resultsPage = response.data!
+                let posts = resultsPage.posts
+                XCTAssertEqual(posts.count, 1)
+                break
+            case .failure(_):
+                break
+            }
         }
     }
-
 }

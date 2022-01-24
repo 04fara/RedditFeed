@@ -6,28 +6,25 @@
 //
 
 import Foundation
-import UIKit
-import AVFoundation
 
-let imageCache: NSCache<NSString, UIImage> = .init()
-let videoCache: NSCache<NSString, AVQueuePlayer> = .init()
-let looperCache: NSCache<AVQueuePlayer, AVPlayerLooper> = .init()
+class DefaultNetworkService: NetworkService {
+    static let shared: DefaultNetworkService = .init()
 
-class NetworkService {
-    class func request<T: Decodable>(endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
+    @discardableResult
+    func request<T: Decodable>(endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) -> URLSessionDataTask? {
         var components: URLComponents = .init()
         components.scheme = endpoint.scheme
         components.host = endpoint.baseURL
         components.path = endpoint.path
         components.queryItems = endpoint.parameters
 
-        guard let url = components.url else { return }
+        guard let url = components.url else { return nil }
 
-        var urlRequest: URLRequest = .init(url: url)
-        urlRequest.httpMethod = endpoint.method
+        var request: URLRequest = .init(url: url)
+        request.httpMethod = endpoint.method
 
         let session: URLSession = .init(configuration: .default)
-        let dataTask = session.dataTask(with: urlRequest) { data, response, error in
+        let dataTask = session.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 print(error.localizedDescription)
@@ -47,27 +44,23 @@ class NetworkService {
             }
         }
         dataTask.resume()
+
+        return dataTask
     }
 
-    class func fetchImage(from url: URL, completion: @escaping (Result<UIImage, Error>) -> Void) -> URLSessionDataTask? {
-        if let image = imageCache.object(forKey: url.absoluteString as NSString) {
-            completion(.success(image))
-            return nil
-        }
-
-        let dataTask = URLSession.shared.dataTask(with: url) { data, _, error in
+    @discardableResult
+    func request(url: URL, completion: @escaping (Result<Data, Error>) -> Void) -> URLSessionDataTask? {
+        let request: URLRequest = .init(url: url, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 10)
+        let dataTask = URLSession.shared.dataTask(with: request) { data, _, error in
             if let error = error {
                 completion(.failure(error))
-                print(error.localizedDescription)
                 return
             }
 
-            guard let data = data,
-                  let image = UIImage(data: data)
+            guard let data = data
             else { return }
 
-            imageCache.setObject(image, forKey: url.absoluteString as NSString)
-            completion(.success(image))
+            completion(.success(data))
         }
         dataTask.resume()
 
