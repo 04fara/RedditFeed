@@ -1,8 +1,20 @@
 # RedditFeed
 
-This application let's you explore Reddit feed separated by subreddit that can be saved for further use.
+This application lets you explore various subreddits and stores them in bookmarks for you to easily find them.
 
 Built using XCode 13.1 (Swift 5.5, for iOS 13.0 or later).
+
+### TODO:
+- Implement:
+    - [x] Endpoints and NetworkService;
+    - [x] custom CollectionView layout;
+    - [x] CollectionView cell for images;
+    - [x] CollectionView cell for videos;
+    - [x] infinite scroll;
+    - [x] sticky header view for subreddits list;
+    - [ ] search bar in footer of subreddit list;
+    - [ ] placeholder (skeleton/shimmer) view that shows up while content is being fetched;
+- [x] Write tests for NetworkService;
 
 ### How to run:
 
